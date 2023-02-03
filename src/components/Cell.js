@@ -39,11 +39,11 @@ function Cell({ x, y, cells, setCells }) {
     }
   };
 
-  const doSum = ({ aX, aY }, val) => {
-    val = val.replace("=", "");
+  const doSum = ({ aX, aY }, exp) => {
+    exp = exp.replace("=", "");
 
-    let indexSum = val.indexOf("+");
-    let indexSub = val.indexOf("-");
+    let indexSum = exp.indexOf("+");
+    let indexSub = exp.indexOf("-");
     let firstIndex;
     let op;
 
@@ -60,30 +60,41 @@ function Cell({ x, y, cells, setCells }) {
       firstIndex = indexSub;
       op = "-";
     } else {
-      return checkCell({ aX, aY }, val);
+      return checkCell({ aX, aY }, exp);
     }
     return (
-      checkCell({ aX, aY }, val.slice(0, firstIndex)) +
+      checkCell({ aX, aY }, exp.slice(0, firstIndex)) +
       `${op}` +
-      doSum({ aX, aY }, val.slice(firstIndex + 1, val.length))
+      doSum({ aX, aY }, exp.slice(firstIndex + 1, exp.length))
     );
   };
 
   const checkCell = ({ aX, aY }, coord) => {
+    let toReturn;
     const letters = "-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let index = letters.indexOf(coord.slice(0, 1));
-    let toReturn;
-    const aux = parseInt(coord.slice(1, coord.length));
-
+    let auxIndex = index;
+    let count = 0;
+    // check how many letters
+    while (auxIndex > 0) {
+      count++;
+      auxIndex = letters.indexOf(coord.slice(count, count + 1));
+    }
+    // index > 0 => cell; else number
     if (index > 0) {
-      toReturn = cells[index][aux].info.value;
+      const numCell = parseInt(coord.slice(count, coord.length));
+      const lettCell = 26 * (count - 1) + index;
+      toReturn = cells[lettCell][numCell].info.value;
       if (
-        !cells[index][aux].info.references.find((reference) => {
+        !cells[lettCell][numCell].info.references.find((reference) => {
           return aX === reference.x && y === reference.y;
         }) &&
-        !(index === aX && aY === aux)
+        !(index === aX && aY === numCell)
       ) {
-        cells[index][aux].info.references.push({ x: aX, y: aY });
+        cells[lettCell][numCell].info.references.push({
+          x: aX,
+          y: aY,
+        });
         setCells(cells);
       }
     } else {
